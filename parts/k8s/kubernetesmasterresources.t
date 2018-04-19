@@ -392,6 +392,9 @@
 {{else}}
         "[variables('vnetID')]",
 {{end}}
+{{if .UseMasterCustomImage}}
+      "[variables('osDiskVhdUri')]"
+{{end}}
         "[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"
 {{if gt .MasterProfile.Count 1}}
         ,"[variables('masterInternalLbName')]"
@@ -747,7 +750,7 @@
        "apiVersion": "[variables('apiVersionKeyVault')]",
        "location": "[variables('location')]",
        {{ if UseManagedIdentity}}
-       "dependsOn": 
+       "dependsOn":
        [
           {{$max := .MasterProfile.Count}}
           {{$c := subtract $max 1}}
@@ -780,7 +783,7 @@
            }
          ],
  {{else}}
-         "accessPolicies": 
+         "accessPolicies":
          [
           {{$max := .MasterProfile.Count}}
           {{$c := subtract $max 1}}

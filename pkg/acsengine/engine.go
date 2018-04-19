@@ -809,6 +809,9 @@ func getParameters(cs *api.ContainerService, isClassicMode bool, generatorCode s
 				addValue(parametersMap, fmt.Sprintf("%sosImageName", agentProfile.Name), agentProfile.ImageRef.Name)
 				addValue(parametersMap, fmt.Sprintf("%sosImageResourceGroup", agentProfile.Name), agentProfile.ImageRef.ResourceGroup)
 			}
+			if len(agentProfile.OSDiskVhdURI) > 0 && agentProfile.ImageRef == nil {
+				addValue(parametersMap, "osDiskVhdUri", agentProfile.OSDiskVhdURI)
+			}
 			addValue(parametersMap, fmt.Sprintf("%sosImageOffer", agentProfile.Name), cloudSpecConfig.OSImageConfig[agentProfile.Distro].ImageOffer)
 			addValue(parametersMap, fmt.Sprintf("%sosImageSKU", agentProfile.Name), cloudSpecConfig.OSImageConfig[agentProfile.Distro].ImageSku)
 			addValue(parametersMap, fmt.Sprintf("%sosImagePublisher", agentProfile.Name), cloudSpecConfig.OSImageConfig[agentProfile.Distro].ImagePublisher)
@@ -1008,6 +1011,14 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 				return len(cs.Properties.OrchestratorProfile.DcosConfig.Registry) > 0
 			}
 			return false
+		},
+		"UseAgentCustomVhd": func(profile *api.AgentPoolProfile) bool {
+			OSDiskVhdURI := profile.OSDiskVhdURI
+			return len(OSDiskVhdURI) > 0
+		},
+		"UseMasterCustomVhd": func() bool {
+			OSDiskVhdURI := cs.Properties.MasterProfile.OSDiskVhdURI
+			return len(OSDiskVhdURI) > 0
 		},
 		"RequiresFakeAgentOutput": func() bool {
 			return cs.Properties.OrchestratorProfile.IsKubernetes() || cs.Properties.OrchestratorProfile.IsOpenShift()
