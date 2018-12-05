@@ -277,6 +277,33 @@ New-NSSMService
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 1048576
 }
 
+# TODO: will containerd have support for running as service?
+function
+Start-Containerd
+{
+    $containerdStartFile = "c:\containerd\containerdstart.ps1"
+    "c:\containerd\containerd.exe --log-level debug" | Out-File -encoding ASCII -filepath $containerdStartFile
+
+    # setup kubelet
+    & "$KubeDir\nssm.exe" install containerd C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    & "$KubeDir\nssm.exe" set containerd AppDirectory "c:\containerd"
+    & "$KubeDir\nssm.exe" set containerd AppParameters $containerdStartFile
+    & "$KubeDir\nssm.exe" set containerd DisplayName containerd
+    & "$KubeDir\nssm.exe" set containerd Description containerd
+    & "$KubeDir\nssm.exe" set containerd Start SERVICE_AUTO_START
+    & "$KubeDir\nssm.exe" set containerd ObjectName LocalSystem
+    & "$KubeDir\nssm.exe" set containerd Type SERVICE_WIN32_OWN_PROCESS
+    & "$KubeDir\nssm.exe" set containerd AppThrottle 1500
+    & "$KubeDir\nssm.exe" set containerd AppStdout C:\k\containerd.log
+    & "$KubeDir\nssm.exe" set containerd AppStderr C:\k\containerd.err.log
+    & "$KubeDir\nssm.exe" set containerd AppStdoutCreationDisposition 4
+    & "$KubeDir\nssm.exe" set containerd AppStderrCreationDisposition 4
+    & "$KubeDir\nssm.exe" set containerd AppRotateFiles 1
+    & "$KubeDir\nssm.exe" set containerd AppRotateOnline 1
+    & "$KubeDir\nssm.exe" set containerd AppRotateSeconds 86400
+    & "$KubeDir\nssm.exe" set containerd AppRotateBytes 1048576
+}
+
 # Renamed from Write-KubernetesStartFiles
 function
 Install-KubernetesServices
@@ -315,7 +342,9 @@ Install-KubernetesServices
         [Parameter(Mandatory=$true)][string]
         $HNSModule,
         [Parameter(Mandatory=$true)][string]
-        $KubeletNodeLabels
+        $KubeletNodeLabels,
+        [Parameter(Mandatory=$true)][bool]
+        $StartContainerd
     )
 
     # Calculate some local paths
@@ -363,6 +392,11 @@ Install-KubernetesServices
         $KubeletArgListStr = $KubeletArgListStr + "`"" + $_.Replace("`"`"","`"`"`"`"") + "`""
     }
     $KubeletArgListStr = "@`($KubeletArgListStr`)"
+
+    #using containerd
+    if ($StartContainerd) {
+        $KubeletArgList += "--container-runtime=remote --container-runtime-endpoint=""npipe:////./pipe/containerd-containerd"""
+    }
 
     # Used in Azure-CNI version of kubeletstart.ps1
     $KubeletCommandLine = "$KubeDir\kubelet.exe " + ($KubeletArgList -join " ")
@@ -619,6 +653,10 @@ $KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:
 "@
 
     $kubeProxyStartStr | Out-File -encoding ASCII -filepath $KubeProxyStartFile
+
+    if($StartContainerd){
+        Start-Containerd
+    }
 
     New-NSSMService -KubeDir $KubeDir `
                     -KubeletStartFile $KubeletStartFile `

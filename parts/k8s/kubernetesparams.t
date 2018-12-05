@@ -393,6 +393,10 @@
       "defaultValue": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-latest.zip",
       "type": "string"
     },
+    "windowsContainerdURL": {
+      "defaultValue": "",
+      "type": "string"
+    },
     "maxPods": {
       "defaultValue": 30,
       "metadata": {

@@ -108,6 +108,9 @@ $global:AzureCNIConfDir = [Io.path]::Combine("$global:AzureCNIDir", "netconf")
 $global:NetworkPlugin = "{{WrapAsParameter "networkPlugin"}}"
 $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
 
+# Containerd Configuraiton
+$global:WindowsContainerdURL = "{{WrapAsParameter "windowsContainerdURL"}}"
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -148,9 +151,14 @@ try
         Write-Log "Create required data directories as needed"
         Initialize-DataDirectories
 
-        Write-Log "Install docker"
-        Install-Docker -DockerVersion $global:DockerVersion
-
+        if ($global:WindowsContainerdURL){
+             Write-Log "Install containerd"
+            Install-Containerd -ContainerdURL $global:WindowsContainerdURL 
+        }else{
+            Write-Log "Install docker"
+            Install-Docker -DockerVersion $global:DockerVersion
+        }
+   
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
 
@@ -220,6 +228,7 @@ try
         }
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
+        $startContainerd = If ($global:WindowsContainerdURL) {"true"} Else {"false"}
         Install-KubernetesServices `
             -KubeletConfigArgs $global:KubeletConfigArgs `
             -KubeBinariesVersion $global:KubeBinariesVersion `
@@ -237,7 +246,8 @@ try
             -KubeClusterCIDR $global:KubeClusterCIDR `
             -KubeServiceCIDR $global:KubeServiceCIDR `
             -HNSModule $global:HNSModule `
-            -KubeletNodeLabels $global:KubeletNodeLabels
+            -KubeletNodeLabels $global:KubeletNodeLabels `
+            -StartContainerd $startContainerd
 
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer

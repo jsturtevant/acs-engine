@@ -34,6 +34,42 @@ function Set-Explorer
     New-ItemProperty -Path HKLM:"\\SOFTWARE\\Policies\\Microsoft\\Internet Explorer\\Main" -Name "Start Page" -Type String -Value http://bing.com
 }
 
+function Install-Containerd
+{
+    Param(
+        [Parameter(Mandatory=$true)][string]
+        $WindowsContainerdURL
+    )
+
+    $tempdir = New-TemporaryDirectory
+    $binaryPackage = "$tempdir\containerd.tar.gz"
+    for ($i=0; $i -le 10; $i++)
+    {
+        DownloadFileOverHttp -Url $WindowsContainerdURL -DestinationPath $binaryPackage
+        if ($?) {
+            break
+        } else {
+            Write-Log $Error[0].Exception.Message
+        }
+    }
+
+    # using tar to minimize dependencies    
+    # tar should be avalible on 1803+
+    tar -xzf $binaryPackage -C $tempdir
+     
+    # copy binaries over to kube folder      
+    $containerdPath = "c:\containerd"
+    if(!(Test-path $containerdPath)) {
+        mkdir $containerdPath
+        mkdir "$containerdPath\data\root"
+        mkdir "$containerdPath\data\state"
+    }   
+    cp $tempdir\* $containerdPath -Recurse
+    
+    #remove temp folder created when unzipping            
+    del $tempdir -Recurse
+}
+
 function Install-Docker
 {
     Param(
