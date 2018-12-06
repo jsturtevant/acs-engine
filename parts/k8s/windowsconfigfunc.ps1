@@ -64,7 +64,7 @@ function Install-Containerd
         mkdir "$containerdPath\data\root"
         mkdir "$containerdPath\data\state"
     }   
-    cp $tempdir\* $containerdPath -Recurse
+    cp $tempdir\kubebinaries\containerd\* $containerdPath -Recurse
     
     #remove temp folder created when unzipping            
     del $tempdir -Recurse
