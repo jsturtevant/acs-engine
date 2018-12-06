@@ -153,7 +153,7 @@ try
 
         if ($global:WindowsContainerdURL){
              Write-Log "Install containerd"
-            Install-Containerd -ContainerdURL $global:WindowsContainerdURL 
+            Install-Containerd -WindowsContainerdURL $global:WindowsContainerdURL 
         }else{
             Write-Log "Install docker"
             Install-Docker -DockerVersion $global:DockerVersion
