@@ -228,7 +228,7 @@ try
         }
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
-        $startContainerd = If ($global:WindowsContainerdURL) {"true"} Else {"false"}
+        $startContainerd = If ($global:WindowsContainerdURL) {$True} Else {$False}
         Install-KubernetesServices `
             -KubeletConfigArgs $global:KubeletConfigArgs `
             -KubeBinariesVersion $global:KubeBinariesVersion `

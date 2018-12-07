@@ -282,7 +282,7 @@ function
 Start-Containerd
 {
     $containerdStartFile = "c:\containerd\containerdstart.ps1"
-    "c:\containerd\containerd.exe --log-level debug" | Out-File -encoding ASCII -filepath $containerdStartFile
+    "c:\containerd\containerd.exe -c c:\containerd\config.toml --log-level debug" | Out-File -encoding ASCII -filepath $containerdStartFile
 
     # setup kubelet
     & "$KubeDir\nssm.exe" install containerd C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
